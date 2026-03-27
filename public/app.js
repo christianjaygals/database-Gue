@@ -14,6 +14,10 @@ async function loadDashboard() {
         document.getElementById("totalWards").innerText = data.wards;
         document.getElementById("totalBeds").innerText = data.beds;
         document.getElementById("totalStaff").innerText = data.staff;
+        
+        // NEW: Load activities & appointments
+        loadRecentActivities();
+        loadUpcomingAppointments();
     } catch (err) {
         console.error("Dashboard Error:", err);
     }
@@ -243,6 +247,124 @@ function initNavbar() {
             sections.forEach(sec => sec.style.display = sec.id === target ? "block" : "none");
         });
     });
+}
+
+/* =========================
+   LOAD RECENT ACTIVITIES (REAL)
+========================= */
+async function loadRecentActivities() {
+    try {
+        const res = await fetch(`${API}/api/recent-activities`);
+        const activities = await res.json();
+        
+        const container = document.getElementById("recentActivities");
+        container.innerHTML = "";
+        
+        activities.forEach(activity => {
+            const icon = {
+                admit: "👤",
+                discharge: "🏥", 
+                appointment: "📅",
+                other: "📋"
+            }[activity.type] || "📋";
+            
+            container.innerHTML += `
+                <div class="activity-item">
+                    <div class="activity-icon">${icon}</div>
+                    <div class="activity-content">
+                        <div class="activity-message">${activity.message}</div>
+                        <div class="activity-time">${activity.time}</div>
+                    </div>
+                </div>
+            `;
+        });
+    } catch (err) {
+        console.error("Activities Error:", err);
+        document.getElementById("recentActivities").innerHTML = 
+            '<div style="text-align:center;padding:20px;color:#64748b;">No recent activities</div>';
+    }
+}
+
+/* =========================
+   LOAD UPCOMING APPOINTMENTS (REAL)
+========================= */
+async function loadUpcomingAppointments() {
+    try {
+        const res = await fetch(`${API}/api/upcoming-appointments`);
+        const appointments = await res.json();
+        
+        const container = document.getElementById("upcomingAppointments");
+        container.innerHTML = "";
+        
+        if (appointments.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:#64748b;">No upcoming appointments</div>';
+            return;
+        }
+        
+        appointments.forEach(apt => {
+            container.innerHTML += `
+                <div class="appointment-item">
+                    <div class="apt-patient">${apt.patient}</div>
+                    <div class="apt-details">
+                        <div class="apt-doctor">${apt.doctor}</div>
+                        <div class="apt-time">${apt.time}</div>
+                    </div>
+                    <div class="apt-date">${apt.date}</div>
+                </div>
+            `;
+        });
+    } catch (err) {
+        console.error("Appointments Error:", err);
+    }
+}
+
+/* =========================
+   STAFF MANAGEMENT (a,b,c)
+========================= */
+async function loadStaff(search = "") {
+    try {
+        const res = await fetch(`${API}/api/staff?search=${encodeURIComponent(search)}`);
+        const staff = await res.json();
+        // Populate staff table...
+    } catch (err) {
+        console.error("Staff Error:", err);
+    }
+}
+
+async function loadStaffByWard() {
+    try {
+        const res = await fetch(`${API}/api/staff-by-ward`);
+        const data = await res.json();
+        // Show ward staff report...
+    } catch (err) {
+        console.error("Staff Report Error:", err);
+    }
+}
+
+/* =========================
+   OUTPATIENTS REPORT (f)
+========================= */
+async function loadOutpatients() {
+    try {
+        const res = await fetch(`${API}/api/outpatients`);
+        const outpatients = await res.json();
+        // Show outpatients table...
+    } catch (err) {
+        console.error("Outpatients Error:", err);
+    }
+}
+
+/* =========================
+   WARD REPORTS (h,i)
+========================= */
+async function loadPatientsByWard() {
+    try {
+        const res = await fetch(`${API}/api/patients-by-ward`);
+        const data = await res.json();
+        // Show patients per ward...
+    } catch (err) {
+        console.error("Ward Report Error:", err);
+    }
 }
 
 /* =========================

@@ -16,9 +16,9 @@
   <div class="nav-links">
     <a href="#dashboard">Dashboard</a>
     <a href="#patients">Patients</a>
-    <a href="#doctors">Doctors</a>
+    <a href="#staff">Staff</a>
     <a href="#wards">Wards</a>
-    <a href="#">Reports</a>
+    <a href="#reports">Reports</a>
   </div>
 </div>
 
@@ -26,15 +26,35 @@
 
   <!-- DASHBOARD -->
   <section id="dashboard">
-    <h1>Dashboard</h1>
+    <h1>Dashboard Overboard</h1>
+    <p>Welcome to Wellmeadows Hospital Management System</p>
 
     <div class="dashboard">
-      <div class="card"><h3>Patients</h3><p id="totalPatients">0</p></div>
-      <div class="card"><h3>Doctors</h3><p id="totalDoctors">0</p></div>
-      <div class="card"><h3>Wards</h3><p id="totalWards">0</p></div>
-      <div class="card"><h3>Beds</h3><p id="totalBeds">0</p></div>
-      <div class="card"><h3>Staff</h3><p id="totalStaff">0</p></div>
+      <div class="card"><h3>Total Patients</h3><p id="totalPatients">0</p></div>
+        <div class="card"><h3>Total Doctors</h3><p id="totalDoctors">0</p></div>
+        <div class="card"><h3>Total Wards</h3><p id="totalWards">0</p></div>
+        <div class="card"><h3>Total Beds</h3><p id="totalBeds">0</p></div>
+        <div class="card"><h3>Total Staff</h3><p id="totalStaff">0</p></div>
+
+        <div class=""></div>
+      </div>
+
+      <!-- RECENT ACTIVITIES -->
+    <div class="activity-section">
+      <h2>Recent Activities</h2>
+      <div id="recentActivities" class="activities-list">
+        <!-- Dynamic content -->
+      </div>
     </div>
+
+    <!-- UPCOMING APPOINTMENTS -->
+    <div class="appointments-section">
+      <h2>Upcoming Appointments</h2>
+      <div id="upcomingAppointments" class="appointments-list">
+        <!-- Dynamic content -->
+      </div>
+    </div>
+
   </section>
 
 <!-- PATIENTS SECTION -->
@@ -138,6 +158,43 @@
     </div>
   </div>
 </div>
+
+<!-- STAFF SECTION (a,b,c) -->
+<section id="staff">
+  <h1>Staff Management</h1>
+    <div class="search-box">
+      <input type="text" id="staffSearch" placeholder="🔍 Search staff by name or position...">
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Name</th><th>Position</th><th>Phone</th><th>Ward</th>
+          </tr>
+        </thead>
+        <tbody id="staffTable"></tbody>
+      </table>
+    </div>
+    <button class="report-btn" onclick="loadStaffByWard()">Staff by Ward Report</button>
+  </section>
+
+  <!-- WARDS SECTION (g,h,i) -->
+  <section id="wards">
+    <h1>Ward Management</h1>
+    <div id="wardsReport"></div>
+    <button class="report-btn" onclick="loadPatientsByWard()">Patients by Ward</button>
+  </section>
+
+  <!-- REPORTS SECTION (f,k,n) -->
+  <section id="reports">
+    <h1>Reports</h1>
+    <div class="report-tabs">
+      <button onclick="loadOutpatients()" class="tab-btn active">Outpatients</button>
+      <button onclick="loadWardReport()" class="tab-btn">Ward Patients</button>
+      <button onclick="loadStaffReport()" class="tab-btn">Staff Report</button>
+    </div>
+    <div id="reportContent"></div>
+  </section>
 
 <script src="app.js"></script>
 </body>

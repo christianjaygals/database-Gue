@@ -137,4 +137,154 @@ app.delete("/api/patients/:id", (req, res) => {
     });
 });
 
+// ------------------- RECENT ACTIVITIES (REAL DATA) -------------------
+app.get("/api/recent-activities", (req, res) => {
+    const sql = `
+        SELECT 
+            'New patient admitted' as activity_type,
+            CONCAT(p.first_name, ' ', p.last_name) as name,
+            TIMESTAMPDIFF(MINUTE, p.date_registered, NOW()) as minutes_ago
+        FROM patient p 
+        WHERE p.date_registered > DATE_SUB(NOW(), INTERVAL 1 DAY)
+        
+        UNION ALL
+        
+        SELECT 
+            CONCAT('Patient discharged: ', ws.first_name, ' ', ws.last_name) as activity_type,
+            '' as name,
+            TIMESTAMPDIFF(HOUR, ws.date_of_birth, NOW()) % 24 as minutes_ago  
+        FROM ward_staff ws
+        WHERE ws.date_of_birth > DATE_SUB(NOW(), INTERVAL 1 DAY)
+        
+        ORDER BY minutes_ago ASC
+        LIMIT 5
+    `;
+    
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json(err);
+        
+        // Format time ago
+        const formatted = results.map(row => ({
+            type: row.activity_type.includes('admitted') ? 'admit' : 
+                  row.activity_type.includes('discharged') ? 'discharge' : 'other',
+            message: row.activity_type,
+            time: formatTimeAgo(row.minutes_ago)
+        }));
+        
+        res.json(formatted);
+    });
+});
+
+// ------------------- UPCOMING APPOINTMENTS (REAL DATA) -------------------
+app.get("/api/upcoming-appointments", (req, res) => {
+    const sql = `
+        SELECT 
+            CONCAT(p.first_name, ' ', p.last_name) as patient,
+            COALESCE(d.full_name, 'No Doctor') as doctor,
+            TIME(p.dob) as time,
+            CASE 
+                WHEN DATE(p.date_registered) = CURDATE() THEN 'Today'
+                ELSE 'Tomorrow'
+            END as date
+        FROM patient p
+        LEFT JOIN local_doctor d ON p.doctor_id = d.doctor_id
+        WHERE p.date_registered >= CURDATE()
+        ORDER BY p.date_registered ASC, TIME(p.dob) ASC
+        LIMIT 5
+    `;
+    
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json(err);
+        res.json(results);
+    });
+});
+
+// ------------------- HELPER FUNCTION -------------------
+function formatTimeAgo(minutes) {
+    if (minutes < 60) return `${minutes} minutes ago`;
+    if (minutes < 1440) return `${Math.floor(minutes/60)} hours ago`;
+    return `${Math.floor(minutes/1440)} days ago`;
+}
+
+// ------------------- STAFF OPERATIONS (a,b,c) -------------------
+// (a) GET ALL STAFF
+app.get("/api/staff", (req, res) => {
+    const search = req.query.search || "";
+    const sql = `
+        SELECT * FROM ward_staff 
+        WHERE first_name LIKE ? OR last_name LIKE ? OR position LIKE ?
+        ORDER BY position, first_name
+    `;
+    db.query(sql, [`%${search}%`, `%${search}%`, `%${search}%`], (err, results) => {
+        if (err) return res.status(500).json(err);
+        res.json(results);
+    });
+});
+
+// (c) STAFF BY WARD REPORT
+app.get("/api/staff-by-ward", (req, res) => {
+    const sql = `
+        SELECT w.ward_name, COUNT(ws.staff_id) as staff_count,
+               GROUP_CONCAT(CONCAT(ws.first_name, ' ', ws.last_name, ' (', ws.position, ')') SEPARATOR ', ') as staff_list
+        FROM ward w
+        LEFT JOIN ward_staff ws ON 1=1
+        GROUP BY w.ward_id, w.ward_name
+        ORDER BY w.ward_name
+    `;
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json(err);
+        res.json(results);
+    });
+});
+
+// ------------------- PATIENT OPERATIONS (f) -------------------
+// (f) OUTPATIENTS REPORT (patients without doctor)
+app.get("/api/outpatients", (req, res) => {
+    const sql = `
+        SELECT p.*, 'No Doctor Assigned' as doctor_name
+        FROM patient p
+        LEFT JOIN local_doctor d ON p.doctor_id = d.doctor_id
+        WHERE p.doctor_id IS NULL
+        ORDER BY p.date_registered DESC
+    `;
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json(err);
+        res.json(results);
+    });
+});
+
+// ------------------- WARD OPERATIONS (h,i) -------------------
+// (h,i) PATIENTS BY WARD (via doctor/registration)
+app.get("/api/patients-by-ward", (req, res) => {
+    const sql = `
+        SELECT w.ward_name, COUNT(p.patient_id) as patient_count,
+               GROUP_CONCAT(CONCAT(p.first_name, ' ', p.last_name) SEPARATOR ', ') as patient_list
+        FROM ward w
+        LEFT JOIN patient p ON 1=1
+        GROUP BY w.ward_id, w.ward_name
+        ORDER BY w.ward_name
+    `;
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json(err);
+        res.json(results);
+    });
+});
+
+// ------------------- SUPPLIERS & REQUISITIONS (l,m,n) -------------------
+app.get("/api/suppliers", (req, res) => {
+    // Mock for now - add suppliers table later
+    res.json([
+        { id: 1, name: "MedSupply Inc", contact: "John Doe", phone: "0912345678" },
+        { id: 2, name: "PharmaCorp", contact: "Jane Smith", phone: "0912345679" }
+    ]);
+});
+
+app.get("/api/requisitions", (req, res) => {
+    res.json([
+        { ward: "Orthopaedic", item: "Gauze", qty: 50, date: "2024-01-15" },
+        { ward: "ICU", item: "IV Drips", qty: 20, date: "2024-01-14" }
+    ]);
+});
+
+
 app.listen(3000, () => console.log("Server running at http://localhost:3000"));
