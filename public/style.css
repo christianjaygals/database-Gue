@@ -330,275 +330,35 @@ html {
     .modal-content.large { width: 95%; }
 }
 
-/* DASHBOARD ENHANCEMENTS */
-.dashboard-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
+table tr.occupied td:nth-child(3) { background: #ffebee; }
+table tr.available td:nth-child(3) { background: #e8f5e8; }
+.assign-btn { background: #4caf50; color: white; }
+.assign-btn { background: #4caf50; color: white; }
+.edit-btn { background: #ff9800; color: white; }
+.delete-btn { background: #f44336; color: white; }
+.occupied td:nth-child(3) { background: #ffebee; color: #d32f2f; }
+.available td:nth-child(3) { background: #e8f5e8; color: #2e7d32; }
 
-.dashboard-header h1 {
-    color: #1e293b;
-    font-size: 2.5rem;
-    margin-bottom: 10px;
-}
-
-.dashboard-header p {
-    color: #64748b;
-    font-size: 1.1rem;
-}
-
-/* STATS GRID */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 24px;
-    margin-bottom: 40px;
-}
-
-.stat-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    padding: 28px;
-    border-radius: 16px;
-    text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    border-top: 4px solid;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--accent-color), transparent);
-}
-
-.stat-card.patients { --accent-color: #3b82f6; }
-.stat-card.doctors { --accent-color: #10b981; }
-.stat-card.wards { --accent-color: #f59e0b; }
-.stat-card.beds { --accent-color: #8b5cf6; }
-.stat-card.staff { --accent-color: #ef4444; }
-
-.stat-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.12);
-}
-
-.stat-card h3 {
-    margin: 0 0 12px 0;
-    color: #64748b;
-    font-size: 0.95rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.stat-card p {
-    font-size: 2.5rem;
-    font-weight: 800;
-    margin: 0;
-    background: linear-gradient(135deg, var(--accent-color), #1e40af);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-/* ACTIVITY SECTION */
-.activity-section, .appointments-section {
-    background: white;
-    border-radius: 16px;
-    padding: 28px;
-    margin-bottom: 30px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-}
-
-.activity-section h2, .appointments-section h2 {
-    color: #1e293b;
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.activity-section h2::before {
-    content: "📋";
-    font-size: 1.3rem;
-}
-
-.appointments-section h2::before {
-    content: "📅";
-    font-size: 1.3rem;
-}
-
-/* RECENT ACTIVITIES */
-.activities-list {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.activity-item {
-    display: flex;
-    gap: 16px;
-    padding: 16px 0;
-    border-bottom: 1px solid #f1f5f9;
-    align-items: flex-start;
-}
-
-.activity-item:last-child {
-    border-bottom: none;
-}
-
-.activity-icon {
-    font-size: 1.8rem;
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.activity-content {
-    flex: 1;
-}
-
-.activity-message {
-    font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 4px;
-    font-size: 0.95rem;
-}
-
-.activity-time {
-    color: #64748b;
-    font-size: 0.85rem;
-}
-
-/* APPOINTMENTS */
-.appointments-list {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.appointment-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 0;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.appointment-item:last-child {
-    border-bottom: none;
-}
-
-.apt-patient {
-    font-weight: 700;
-    color: #1e293b;
-    font-size: 1.05rem;
-}
-
-.apt-details {
-    text-align: center;
-    flex: 1;
-}
-
-.apt-doctor {
-    color: #3b82f6;
-    font-weight: 600;
-    margin-bottom: 4px;
-}
-
-.apt-time {
-    background: #eff6ff;
-    color: #1d4ed8;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-.apt-date {
-    color: #10b981;
-    font-weight: 600;
-    font-size: 0.9rem;
-    min-width: 80px;
-    text-align: right;
-}
-
-/* SCROLLBAR */
-.activities-list::-webkit-scrollbar,
-.appointments-list::-webkit-scrollbar,
-.patient-details::-webkit-scrollbar,
-.modal-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.activities-list::-webkit-scrollbar-track,
-.appointments-list::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 10px;
-}
-
-.activities-list::-webkit-scrollbar-thumb,
-.appointments-list::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-}
-
-.activities-list::-webkit-scrollbar-thumb:hover,
-.appointments-list::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-.report-btn {
-    background: #8b5cf6;
-    color: white;
+.view-btn, .edit-btn, .delete-btn {
+    padding: 5px 10px;
+    margin: 2px;
     border: none;
-    padding: 12px 24px;
-    border-radius: 10px;
+    border-radius: 4px;
     cursor: pointer;
-    margin: 20px 0;
-    font-weight: 600;
+    font-size: 12px;
 }
 
-.report-btn:hover {
-    background: #7c3aed;
-    transform: translateY(-2px);
+.view-btn {
+    background: #007bff;
+    color: white;
 }
 
-.report-tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #e2e8f0;
+.edit-btn {
+    background: #28a745;
+    color: white;
 }
 
-.tab-btn {
-    background: none;
-    border: none;
-    padding: 12px 24px;
-    cursor: pointer;
-    font-weight: 600;
-    color: #64748b;
-    border-bottom: 3px solid transparent;
-    transition: all 0.2s;
-}
-
-.tab-btn.active {
-    color: #3b82f6;
-    border-bottom-color: #3b82f6;
-}
-
-.tab-btn:hover {
-    color: #1d4ed8;
+.delete-btn {
+    background: #dc3545;
+    color: white;
 }
