@@ -39,14 +39,6 @@ app.get("/api/dashboard", async (req, res) => {
     }
 });
 
-// ------------------- GET DOCTORS -------------------
-app.get("/api/doctors", (req, res) => {
-    db.query("SELECT doctor_id, full_name FROM local_doctor ORDER BY full_name", (err, results) => {
-        if (err) return res.status(500).json(err);
-        res.json(results);
-    });
-});
-
 // ------------------- GET PATIENTS LIST (GLOBAL SEARCH) -------------------
 app.get("/api/patients", (req, res) => {
     const search = req.query.search || "";
@@ -137,154 +129,179 @@ app.delete("/api/patients/:id", (req, res) => {
     });
 });
 
-// ------------------- RECENT ACTIVITIES (REAL DATA) -------------------
-app.get("/api/recent-activities", (req, res) => {
-    const sql = `
-        SELECT 
-            'New patient admitted' as activity_type,
-            CONCAT(p.first_name, ' ', p.last_name) as name,
-            TIMESTAMPDIFF(MINUTE, p.date_registered, NOW()) as minutes_ago
-        FROM patient p 
-        WHERE p.date_registered > DATE_SUB(NOW(), INTERVAL 1 DAY)
-        
-        UNION ALL
-        
-        SELECT 
-            CONCAT('Patient discharged: ', ws.first_name, ' ', ws.last_name) as activity_type,
-            '' as name,
-            TIMESTAMPDIFF(HOUR, ws.date_of_birth, NOW()) % 24 as minutes_ago  
-        FROM ward_staff ws
-        WHERE ws.date_of_birth > DATE_SUB(NOW(), INTERVAL 1 DAY)
-        
-        ORDER BY minutes_ago ASC
-        LIMIT 5
-    `;
-    
-    db.query(sql, (err, results) => {
-        if (err) return res.status(500).json(err);
-        
-        // Format time ago
-        const formatted = results.map(row => ({
-            type: row.activity_type.includes('admitted') ? 'admit' : 
-                  row.activity_type.includes('discharged') ? 'discharge' : 'other',
-            message: row.activity_type,
-            time: formatTimeAgo(row.minutes_ago)
-        }));
-        
-        res.json(formatted);
-    });
-});
-
-// ------------------- UPCOMING APPOINTMENTS (REAL DATA) -------------------
-app.get("/api/upcoming-appointments", (req, res) => {
-    const sql = `
-        SELECT 
-            CONCAT(p.first_name, ' ', p.last_name) as patient,
-            COALESCE(d.full_name, 'No Doctor') as doctor,
-            TIME(p.dob) as time,
-            CASE 
-                WHEN DATE(p.date_registered) = CURDATE() THEN 'Today'
-                ELSE 'Tomorrow'
-            END as date
-        FROM patient p
-        LEFT JOIN local_doctor d ON p.doctor_id = d.doctor_id
-        WHERE p.date_registered >= CURDATE()
-        ORDER BY p.date_registered ASC, TIME(p.dob) ASC
-        LIMIT 5
-    `;
-    
-    db.query(sql, (err, results) => {
-        if (err) return res.status(500).json(err);
-        res.json(results);
-    });
-});
-
-// ------------------- HELPER FUNCTION -------------------
-function formatTimeAgo(minutes) {
-    if (minutes < 60) return `${minutes} minutes ago`;
-    if (minutes < 1440) return `${Math.floor(minutes/60)} hours ago`;
-    return `${Math.floor(minutes/1440)} days ago`;
-}
-
-// ------------------- STAFF OPERATIONS (a,b,c) -------------------
-// (a) GET ALL STAFF
-app.get("/api/staff", (req, res) => {
+app.get("/api/beds", (req, res) => {
     const search = req.query.search || "";
     const sql = `
-        SELECT * FROM ward_staff 
-        WHERE first_name LIKE ? OR last_name LIKE ? OR position LIKE ?
-        ORDER BY position, first_name
+        SELECT 
+            b.bed_id, b.bed_number, w.ward_id, b.patient_id,
+            w.ward_name,
+            CONCAT(p.first_name, ' ', p.last_name) as patient_name
+        FROM bed b
+        JOIN ward w ON b.ward_id = w.ward_id
+        LEFT JOIN patient p ON b.patient_id = p.patient_id
+        WHERE b.bed_number LIKE ? OR w.ward_name LIKE ? OR p.first_name LIKE ? OR p.last_name LIKE ?
+        ORDER BY w.ward_id, b.bed_number
     `;
-    db.query(sql, [`%${search}%`, `%${search}%`, `%${search}%`], (err, results) => {
-        if (err) return res.status(500).json(err);
+    const value = `%${search}%`;
+    db.query(sql, [value, value, value, value], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
         res.json(results);
     });
 });
 
-// (c) STAFF BY WARD REPORT
-app.get("/api/staff-by-ward", (req, res) => {
+app.post("/api/beds/:id/assign", (req, res) => {
+    const bed_id = req.params.id;
+    const { patient_id } = req.body;
+    
+    db.query('UPDATE bed SET patient_id = ? WHERE bed_id = ?', [patient_id, bed_id], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+// ------------------- GET BEDS (GLOBAL SEARCH) -------------------
+app.get("/api/beds", (req, res) => {
+    const search = req.query.search || "";
     const sql = `
-        SELECT w.ward_name, COUNT(ws.staff_id) as staff_count,
-               GROUP_CONCAT(CONCAT(ws.first_name, ' ', ws.last_name, ' (', ws.position, ')') SEPARATOR ', ') as staff_list
-        FROM ward w
-        LEFT JOIN ward_staff ws ON 1=1
-        GROUP BY w.ward_id, w.ward_name
-        ORDER BY w.ward_name
+        SELECT 
+            b.bed_id, b.bed_number, w.ward_id, b.patient_id,
+            w.ward_name,
+            CONCAT(p.first_name, ' ', p.last_name) as patient_name
+        FROM bed b
+        JOIN ward w ON b.ward_id = w.ward_id
+        LEFT JOIN patient p ON b.patient_id = p.patient_id
+        WHERE b.bed_number LIKE ? OR w.ward_name LIKE ? OR p.first_name LIKE ? OR p.last_name LIKE ?
+        ORDER BY w.ward_id, b.bed_number
     `;
-    db.query(sql, (err, results) => {
-        if (err) return res.status(500).json(err);
+    const value = `%${search}%`;
+    db.query(sql, [value, value, value, value], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
         res.json(results);
     });
 });
 
-// ------------------- PATIENT OPERATIONS (f) -------------------
-// (f) OUTPATIENTS REPORT (patients without doctor)
-app.get("/api/outpatients", (req, res) => {
+app.post("/api/beds/:id/assign", (req, res) => {
+    const bed_id = req.params.id;
+    const { patient_id } = req.body;
+    
+    db.query('UPDATE bed SET patient_id = ? WHERE bed_id = ?', [patient_id, bed_id], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+// Add this route (before app.listen)
+app.post('/api/beds/:id/discharge', function(req, res) {
+    const bed_id = req.params.id;
+    console.log("🛏️ DISCHARGE BED:", bed_id);
+    
+    db.query('UPDATE bed SET patient_id = NULL WHERE bed_id = ?', [bed_id], function(err, result) {
+        if (err) {
+            console.error("❌ SQL ERROR:", err);
+            return res.status(500).send("Database error");
+        }
+        console.log("✅ DISCHARGED! Rows:", result.affectedRows);
+        res.json({ success: true });
+    });
+});
+
+// ------------------- GET DOCTORS (WITH SEARCH) -------------------
+app.get("/api/doctors", (req, res) => {
+    const search = req.query.search || "";
+    
+    if (search) {
+        const sql = `
+            SELECT doctor_id, full_name, phone, address, clinic_name 
+            FROM local_doctor 
+            WHERE full_name LIKE ? OR phone LIKE ? OR clinic_name LIKE ? OR address LIKE ?
+            ORDER BY full_name ASC
+        `;
+        const value = `%${search}%`;
+        db.query(sql, [value, value, value, value], (err, results) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(results);
+        });
+    } else {
+        db.query("SELECT doctor_id, full_name, phone, address, clinic_name FROM local_doctor ORDER BY full_name ASC", (err, results) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(results);
+        });
+    }
+});
+
+// ------------------- GET SINGLE DOCTOR (View/Edit) -------------------
+app.get("/api/doctors/:id", (req, res) => {
+    const id = req.params.id;
     const sql = `
-        SELECT p.*, 'No Doctor Assigned' as doctor_name
-        FROM patient p
-        LEFT JOIN local_doctor d ON p.doctor_id = d.doctor_id
-        WHERE p.doctor_id IS NULL
-        ORDER BY p.date_registered DESC
+        SELECT doctor_id, full_name, phone, address, clinic_name 
+        FROM local_doctor 
+        WHERE doctor_id = ?
     `;
-    db.query(sql, (err, results) => {
-        if (err) return res.status(500).json(err);
-        res.json(results);
+    db.query(sql, [id], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (results.length === 0) return res.status(404).json({ error: "Doctor not found" });
+        res.json(results[0]);
     });
 });
 
-// ------------------- WARD OPERATIONS (h,i) -------------------
-// (h,i) PATIENTS BY WARD (via doctor/registration)
-app.get("/api/patients-by-ward", (req, res) => {
+// ------------------- UPDATE DOCTOR -------------------
+app.put("/api/doctors/:id", (req, res) => {
+    const id = req.params.id;
+    const { full_name, phone, clinic_name, address } = req.body;
+    
+    console.log('🔍 Updating doctor:', { id, full_name, phone, clinic_name, address });
+    
     const sql = `
-        SELECT w.ward_name, COUNT(p.patient_id) as patient_count,
-               GROUP_CONCAT(CONCAT(p.first_name, ' ', p.last_name) SEPARATOR ', ') as patient_list
-        FROM ward w
-        LEFT JOIN patient p ON 1=1
-        GROUP BY w.ward_id, w.ward_name
-        ORDER BY w.ward_name
+        UPDATE local_doctor 
+        SET full_name = ?, phone = ?, clinic_name = ?, address = ?
+        WHERE doctor_id = ?
     `;
-    db.query(sql, (err, results) => {
-        if (err) return res.status(500).json(err);
-        res.json(results);
+    // ❌ WRONG: clinic_name and address are swapped!
+    // db.query(sql, [full_name || null, phone || null, clinic_name || null, address || null, id], (err, result) => {
+    
+    // ✅ FIXED: Correct order - matches column order EXACTLY
+    db.query(sql, [full_name || null, phone || null, clinic_name || null, address || null, id], (err, result) => {
+        console.log('🔍 Update result:', result.affectedRows);
+        
+        if (err) {
+            console.error('🚨 SQL ERROR:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Doctor not found' });
+        }
+        res.json({ message: "Doctor updated successfully" });
     });
 });
 
-// ------------------- SUPPLIERS & REQUISITIONS (l,m,n) -------------------
-app.get("/api/suppliers", (req, res) => {
-    // Mock for now - add suppliers table later
-    res.json([
-        { id: 1, name: "MedSupply Inc", contact: "John Doe", phone: "0912345678" },
-        { id: 2, name: "PharmaCorp", contact: "Jane Smith", phone: "0912345679" }
-    ]);
+// ------------------- ADD DOCTOR -------------------
+app.post("/api/doctors", (req, res) => {
+    const { full_name, phone, clinic_name, address } = req.body;
+    
+    console.log('🧪 Adding doctor:', { full_name, phone, address, clinic_name }); // 🧪 DEBUG
+    
+    const sql = `
+        INSERT INTO local_doctor (full_name, phone, address, clinic_name)
+        VALUES (?, ?, ?, ?)
+    `;
+    // ✅ CORRECT: Matches column order perfectly
+    db.query(sql, [full_name, phone || null, address || null, clinic_name], (err, result) => {
+        console.log('🧪 Insert result:', result); // 🧪 DEBUG
+        
+        if (err) {
+            console.error('🚨 INSERT ERROR:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ message: "Doctor added successfully", insertId: result.insertId });
+    });
 });
 
-app.get("/api/requisitions", (req, res) => {
-    res.json([
-        { ward: "Orthopaedic", item: "Gauze", qty: 50, date: "2024-01-15" },
-        { ward: "ICU", item: "IV Drips", qty: 20, date: "2024-01-14" }
-    ]);
+// ------------------- DELETE DOCTOR -------------------
+app.delete("/api/doctors/:id", (req, res) => {
+    const id = req.params.id;
+    db.query("DELETE FROM local_doctor WHERE doctor_id = ?", [id], (err) => {
+        if (err) return res.status(500).json(err);
+        res.json({ message: "Doctor deleted successfully" });
+    });
 });
-
 
 app.listen(3000, () => console.log("Server running at http://localhost:3000"));
