@@ -16,9 +16,9 @@
   <div class="nav-links">
     <a href="#dashboard">Dashboard</a>
     <a href="#patients">Patients</a>
-    <a href="#staff">Staff</a>
+    <a href="#doctors">Doctors</a>
     <a href="#wards">Wards</a>
-    <a href="#reports">Reports</a>
+    <a href="#">Reports</a>
   </div>
 </div>
 
@@ -26,35 +26,15 @@
 
   <!-- DASHBOARD -->
   <section id="dashboard">
-    <h1>Dashboard Overboard</h1>
-    <p>Welcome to Wellmeadows Hospital Management System</p>
+    <h1>Dashboard</h1>
 
     <div class="dashboard">
-      <div class="card"><h3>Total Patients</h3><p id="totalPatients">0</p></div>
-        <div class="card"><h3>Total Doctors</h3><p id="totalDoctors">0</p></div>
-        <div class="card"><h3>Total Wards</h3><p id="totalWards">0</p></div>
-        <div class="card"><h3>Total Beds</h3><p id="totalBeds">0</p></div>
-        <div class="card"><h3>Total Staff</h3><p id="totalStaff">0</p></div>
-
-        <div class=""></div>
-      </div>
-
-      <!-- RECENT ACTIVITIES -->
-    <div class="activity-section">
-      <h2>Recent Activities</h2>
-      <div id="recentActivities" class="activities-list">
-        <!-- Dynamic content -->
-      </div>
+      <div class="card"><h3>Patients</h3><p id="totalPatients">0</p></div>
+      <div class="card"><h3>Doctors</h3><p id="totalDoctors">0</p></div>
+      <div class="card"><h3>Wards</h3><p id="totalWards">0</p></div>
+      <div class="card"><h3>Beds</h3><p id="totalBeds">0</p></div>
+      <div class="card"><h3>Staff</h3><p id="totalStaff">0</p></div>
     </div>
-
-    <!-- UPCOMING APPOINTMENTS -->
-    <div class="appointments-section">
-      <h2>Upcoming Appointments</h2>
-      <div id="upcomingAppointments" class="appointments-list">
-        <!-- Dynamic content -->
-      </div>
-    </div>
-
   </section>
 
 <!-- PATIENTS SECTION -->
@@ -81,6 +61,61 @@
         </tr>
       </thead>
       <tbody id="patientTable"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- WARDS SECTION -->
+<section id="wards">
+  <h1>🛏️ Bed Management</h1>
+  
+  <div class="search-box">
+    <input type="text" id="bedSearch" placeholder="🔍 Search beds, patients...">
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Bed</th>
+          <th>Status</th>
+          <th>Patient</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="bedsTable">
+        <tr><td colspan="5" style="text-align:center;">Loading beds...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- DOCTORS SECTION -->
+<section id="doctors">
+  <h1>👨‍⚕️ Doctor Management</h1>
+  
+  <div class="search-box">
+    <input type="text" id="doctorSearch" placeholder="🔍 Search by name, phone, clinic...">
+  </div>
+
+  <button class="add-btn" onclick="openAddDoctorNew()">➕ Add Doctor</button>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Clinic</th>
+          <th>Address</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="doctorsTable">
+        <tr><td colspan="6" style="text-align:center;">Loading doctors...</td></tr>
+      </tbody>
     </table>
   </div>
 </section>
@@ -152,6 +187,20 @@
     <select id="edit_doctor_id">
       <option value="">Select Doctor</option>
     </select>
+
+    <!-- Add these INSIDE your existing editModal form -->
+    <select id="edit_ward_type" style="display:none;">
+      <option value="">Ward Type</option>
+      <option value="General">General</option>
+      <option value="ICU">ICU</option>
+      <option value="Maternity">Maternity</option>
+      <option value="Pediatric">Pediatric</option>
+    </select>
+    <input id="edit_ward_name" placeholder="Ward Name" style="display:none;">
+    <input id="edit_total_beds" type="number" placeholder="Total Beds" style="display:none;">
+    <input id="edit_available_beds" type="number" placeholder="Available Beds" style="display:none;">
+    <input id="edit_ward_id" type="hidden">
+
     <div class="modal-buttons">
       <button onclick="updatePatient()" class="save-btn">Update Patient</button>
       <button onclick="closeEditForm()" class="cancel-btn">Cancel</button>
@@ -159,42 +208,47 @@
   </div>
 </div>
 
-<!-- STAFF SECTION (a,b,c) -->
-<section id="staff">
-  <h1>Staff Management</h1>
-    <div class="search-box">
-      <input type="text" id="staffSearch" placeholder="🔍 Search staff by name or position...">
+<!--  ADD DOCTOR MODAL - NEW SYSTEM -->
+<div id="addDoctorModalNew" class="modal">
+  <div class="modal-content">
+    <h3>➕ Add New Doctor</h3>
+    <input id="newDoctorName" placeholder="Full Name *" required>
+    <input id="newDoctorPhone" placeholder="Phone">
+    <input id="newDoctorAddress" placeholder="Address">
+    <input id="newDoctorClinic" placeholder="Clinic Name">
+    <div class="modal-buttons">
+      <button id="saveNewDoctorBtn" class="save-btn">Save Doctor</button>
+      <button onclick="closeAddDoctorNew()" class="cancel-btn">Cancel</button>
     </div>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th><th>Name</th><th>Position</th><th>Phone</th><th>Ward</th>
-          </tr>
-        </thead>
-        <tbody id="staffTable"></tbody>
-      </table>
-    </div>
-    <button class="report-btn" onclick="loadStaffByWard()">Staff by Ward Report</button>
-  </section>
+  </div>
+</div>
 
-  <!-- WARDS SECTION (g,h,i) -->
-  <section id="wards">
-    <h1>Ward Management</h1>
-    <div id="wardsReport"></div>
-    <button class="report-btn" onclick="loadPatientsByWard()">Patients by Ward</button>
-  </section>
-
-  <!-- REPORTS SECTION (f,k,n) -->
-  <section id="reports">
-    <h1>Reports</h1>
-    <div class="report-tabs">
-      <button onclick="loadOutpatients()" class="tab-btn active">Outpatients</button>
-      <button onclick="loadWardReport()" class="tab-btn">Ward Patients</button>
-      <button onclick="loadStaffReport()" class="tab-btn">Staff Report</button>
+<!--  EDIT DOCTOR MODAL - NEW SYSTEM -->
+<div id="editDoctorModalNew" class="modal">
+  <div class="modal-content">
+    <h3>✏️ Edit Doctor</h3>
+    <input id="editDoctorIdNew" type="hidden">
+    <input id="editDoctorName" placeholder="Full Name *" required>
+    <input id="editDoctorPhone" placeholder="Phone">
+    <input id="editDoctorAddress" placeholder="Address">
+    <input id="editDoctorClinic" placeholder="Clinic Name">
+    <div class="modal-buttons">
+      <button id="saveEditDoctorBtn" class="save-btn">Update Doctor</button>
+      <button onclick="closeEditDoctorNew()" class="cancel-btn">Cancel</button>
     </div>
-    <div id="reportContent"></div>
-  </section>
+  </div>
+</div>
+
+<!-- VIEW DOCTOR MODAL -->
+<div id="viewDoctorModal" class="modal">
+  <div class="modal-content">
+    <h3 id="viewDoctorTitle">Doctor Details</h3>
+    <div id="viewDoctorContent">Loading...</div>
+    <div class="modal-buttons">
+      <button onclick="closeViewDoctorForm()" class="cancel-btn">Close</button>
+    </div>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>
