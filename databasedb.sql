@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS weallowsdb;
-CREATE DATABASE weallowsdb;
-USE weallowsdb;
+DROP DATABASE IF EXISTS hospitalDATA;
+CREATE DATABASE hospitalDATA;
+USE hospitalDATA;
 
 CREATE TABLE ward (
     ward_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -144,4 +144,4 @@ INSERT INTO next_of_kin (patient_id,full_name,relationship,address,phone) VALUES
 
 select * from patient
 
-
+select * from bed
